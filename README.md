@@ -2,17 +2,19 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.0.4.
 
-## Development server
+## Get started
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+To get started you have to have Node.js and npm installed. [Node.js](https://nodejs.org)
+
+You also need to have angular cli be installed. [Angular CLI](https://cli.angular.io/)
+Installing angular-cli globaly on your system `npm install -g @angular/cli`
+
+After cloneing the repo you have to go in the root directory of your project and then run `npm install`.
+Then run `npm run electron` and you should have successfully created the first basic app.
 
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
 
 ## Running unit tests
 
