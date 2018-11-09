@@ -1,0 +1,36 @@
+:host {
+    display: block;
+}
+.emp-loading {
+    color: white;
+}
+.emp-movie-menu {
+    width: 100%;
+    color: #dbdbdb;
+    > div {
+        margin: 1%;
+        z-index: 200;
+        width: 25%;
+        height: 50px;
+        background-color: rgba(12,12,12, 0.9);
+    }
+}
+.emp-preview-video-container {
+    position: absolute;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    video {
+        min-width: 100%;
+        min-height: 100vh;
+        width: auto;
+        height: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+    }
+}
