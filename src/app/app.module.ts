@@ -9,12 +9,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { StartPageComponent } from './start-page/start-page.component';
 import { DetailPageComponent } from './detail-page/detail-page.component';
+import { MinhComponent } from './minh/minh.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     StartPageComponent,
-    DetailPageComponent
+    DetailPageComponent,
+    MinhComponent
   ],
   imports: [
     BrowserModule,
