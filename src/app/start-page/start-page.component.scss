@@ -5,14 +5,33 @@
     color: white;
 }
 .emp-movie-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100vh;
+    overflow-y: scroll;
     color: #dbdbdb;
-    > div {
-        margin: 1%;
+    z-index: 200;
+    margin: 0;
+    padding: 0;
+    .emp-movie-menu-container {
+        width: 100%;
+        margin-top: 60vh;
         z-index: 200;
-        width: 25%;
-        height: 50px;
-        background-color: rgba(12,12,12, 0.9);
+        .emp-movie-menu-container-item {
+            box-sizing: border-box;
+            padding: 10px;
+            // z-index: 200;
+            // width: 20%;
+            height: 70px;
+            
+            > div {
+                width: 100%;
+                height: 50px;
+                background-color: rgba(12,12,12, 0.9);
+            }
+        }
     }
 }
 .emp-preview-video-container {

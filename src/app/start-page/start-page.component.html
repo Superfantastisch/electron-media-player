@@ -3,9 +3,11 @@
   <video #videoPlayer autoplay loop></video>
 </section>
 <!-- movies menu layer -->
-<menu class="emp-movie-menu" fxLayout="row wrap" style="margin-top: 100px;">
-  <div *ngFor="let movie of movies">
-    {{ movie.name }}
+<menu class="emp-movie-menu" (scroll)="onScroll($event)">
+  <div class="emp-movie-menu-container" *ngIf="movies" fxLayout="row wrap">
+      <div class="emp-movie-menu-container-item" *ngFor="let movie of movies" fxFlex="25%" fxFlexAlign="center">
+          <div>{{ movie.name }}</div>
+        </div>
   </div>
 </menu>
 <section class="emp-loading" *ngIf="isLoading">

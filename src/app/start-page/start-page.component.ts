@@ -16,6 +16,8 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   isLoading = true;
   // movies collection
   movies: Array<IMovie>;
+  // video element
+  video = null;
 
   constructor(
     private movieService: MovieService
@@ -23,14 +25,14 @@ export class StartPageComponent implements OnInit, AfterViewInit {
 
   initPlayer(): void {
     // Create a Player instance.
-    const video = this.videoPlayer.nativeElement;
-    video.muted = true;
+    this.video = this.videoPlayer.nativeElement;
+    this.video.muted = true;
     // fires when the video is ready to play
-    video.oncanplay = () => {
+    this.video.oncanplay = () => {
       this.isLoading = false;
     };
 
-    const player = new shaka.Player(video);
+    const player = new shaka.Player(this.video);
 
     // Attach player to the window to make it easy to access in the JS console.
     // window.player = this.player;
@@ -70,12 +72,25 @@ export class StartPageComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // checking for scroll events
+  onScroll(event): void {
+    // while user is scrolling down -> the background video should be paused
+    if (event.target.scrollTop !== 0 && this.video) {
+      this.video.pause();
+    } else {
+      // if the user is on the top position, the video should play
+      this.video.play();
+    }
+  }
+
   ngOnInit() {
+    // get the movies list from the mocked movies api
+    this.getMovies();
   }
 
   ngAfterViewInit() {
+    // after view init the video element/ shaka player should be initialized
     this.setupComponent();
-    this.getMovies();
   }
 
 }
