@@ -1,8 +1,18 @@
 <section class="emp-detail-view">
-    <header>
-        <button mat-button (click)="goBack()">Back</button>
-      </header>
-      <div *ngIf="movie">
-          {{ movie | json }} 
-      </div>      
+  <header>
+    
+  </header>
+  <div *ngIf="movie">
+    {{ movie | json }}
+  </div>
+  <section #movieSection>
+    <h1 *ngIf="movie">
+        {{ movie.name }}
+      </h1>
+      <section class="emp-video-container">
+          <video #videoPlayer id='videoPlayer' controls autoplay poster="//shaka-player-demo.appspot.com/assets/poster.jpg" width="80%"></video>
+      </section>
+      <button mat-app-background #downloadButton mat-stroked-button>Download for offline usage</button>
+  </section>
+  
 </section>
