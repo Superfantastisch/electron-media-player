@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angula
 import * as shaka from 'shaka-player';
 import { MovieService } from '../movie.service';
 import { IMovie } from '../models/movies';
+import { Router } from '@angular/router';
 
 const manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
 
@@ -20,8 +21,13 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   video = null;
 
   constructor(
-    private movieService: MovieService
+    private movieService: MovieService,
+    private router: Router
   ) { }
+
+  selectMovie(movie: IMovie) {
+    this.router.navigate(['/detail-page', movie]);
+  }
 
   initPlayer(): void {
     // Create a Player instance.
