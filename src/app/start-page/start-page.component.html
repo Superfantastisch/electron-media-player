@@ -1,3 +1,15 @@
-<p>
-  start-page works!
-</p>
+<!-- background video layer -->
+<section class="emp-preview-video-container">
+  <video #videoPlayer autoplay loop></video>
+</section>
+<!-- movies menu layer -->
+<menu class="emp-movie-menu" (scroll)="onScroll($event)">
+  <div class="emp-movie-menu-container" *ngIf="movies" fxLayout="row wrap">
+      <div class="emp-movie-menu-container-item" *ngFor="let movie of movies" fxFlex="25%" fxFlexAlign="center" (click)="selectMovie(movie)">
+          <div>{{ movie.name }}</div>
+        </div>
+  </div>
+</menu>
+<section class="emp-loading" *ngIf="isLoading">
+  <img src="assets/rings.svg" alt="rings">
+</section>

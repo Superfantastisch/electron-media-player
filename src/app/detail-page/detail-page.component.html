@@ -1,3 +1,8 @@
-<p>
-  detail-page works!
-</p>
+<section class="emp-detail-view">
+    <header>
+        <button mat-button (click)="goBack()">Back</button>
+      </header>
+      <div *ngIf="movie">
+          {{ movie | json }} 
+      </div>      
+</section>

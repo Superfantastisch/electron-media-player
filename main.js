@@ -3,6 +3,8 @@ const path = require("path");
 const url = require("url");
 
 let win;
+// setup
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 function createWindow() {
   win = new BrowserWindow({ width: 800, height: 600 });
