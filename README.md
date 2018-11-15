@@ -2,21 +2,24 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.0.4.
 
-## Get started
+## Getting started
 
 To get started you have to install Node.js and npm. [Node.js](https://nodejs.org)
 
 You also need to install the angular cli. [Angular CLI](https://cli.angular.io/)
 
-Installing angular-cli globaly on your system:
+Installing angular-cli globally on your system:
 `npm install -g @angular/cli`
 
-After cloneing the repo you have to go in the root directory of your project and then run: 
+After cloning the repo you have to go in the root directory of your project and then run: 
 `npm install`
 
 Then run 
 `npm run electron` 
 and you should have successfully created the first basic app.
+
+Run `npm run start` to build and serve the app on `http://localhost:4200/`, rebuilding on file changes. However, for Electron-specific features (e.g., filesystem access), additionally run `npm run electron:serve`
+to run the app with hot-reload and Electron.
 
 ## Code scaffolding
 
