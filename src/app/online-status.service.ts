@@ -1,19 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
-import { take, map, mergeMap } from 'rxjs/operators';
+import { Observable, from, timer } from 'rxjs';
+import { mergeMap, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OnlineStatusService {
-  private uri : string = "https://ipv4.icanhazip.com/";
-  private timeout : number = 5000;
+  private uri: string = "https://ipv4.icanhazip.com/";
+  private timeout: number = 5000;
+  private _isOnline: boolean;
 
   constructor() { }
 
   // Does a simple http request to a website. Resolves to `true`, iff
   // website loaded successfully.
-  get isOnline(): Observable<boolean> {
+  private get isOnline$(): Observable<boolean> {
     return from(new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
@@ -27,4 +28,18 @@ export class OnlineStatusService {
       xhr.send();
     }));
   }
+
+  get isOnline(): boolean {
+    return this._isOnline;
+  }
+
+  public start() {
+    timer(0, 5000).pipe(
+      mergeMap(_ => this.isOnline$),
+      tap(_ => console.log("Get online status")),
+    ).subscribe(
+      isOnline => isOnline ? this._isOnline = true : this._isOnline = false
+    );
+  }
+
 }
