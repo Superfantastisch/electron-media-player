@@ -10,18 +10,19 @@ import { OnlineStatusService } from '../online-status.service';
   styleUrls: ['./online-status.component.scss']
 })
 export class OnlineStatusComponent implements OnInit {
-  onlineStatus : Observable<boolean> = null;
-  onlineStatus2 : boolean = true;
+  onlineStatus : boolean = null;
   
   constructor(
     private onlineStatusService: OnlineStatusService,
-    ) { }
+    ) {
+      timer(0, 5000).pipe(
+        mergeMap(_ => this.onlineStatusService.isOnline),
+        tap(_ => console.log("Get online status")),
+      ).subscribe(isOnline => this.onlineStatus = isOnline);
+     }
 
   ngOnInit() {
-    this.onlineStatus = timer(0, 5000).pipe(
-      mergeMap(_ => this.onlineStatusService.isOnline),
-      tap(_ => console.log("Get online status")),
-    );
+    
   }
 
 }
