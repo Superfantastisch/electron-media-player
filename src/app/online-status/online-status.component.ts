@@ -14,15 +14,14 @@ export class OnlineStatusComponent implements OnInit {
   
   constructor(
     private onlineStatusService: OnlineStatusService,
-    ) {
-      timer(0, 5000).pipe(
-        mergeMap(_ => this.onlineStatusService.isOnline),
-        tap(_ => console.log("Get online status")),
-      ).subscribe(isOnline => this.onlineStatus = isOnline);
-     }
+    ) { }
 
   ngOnInit() {
-    
+    // Update online status every 5s
+    timer(0, 5000).pipe(
+      mergeMap(_ => this.onlineStatusService.isOnline),
+      tap(_ => console.log("Get online status")),
+    ).subscribe(isOnline => this.onlineStatus = isOnline);
   }
 
 }
