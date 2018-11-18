@@ -1,21 +1,20 @@
 import { Injectable } from '@angular/core';
 import { Observable, from, timer } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { mergeMap, tap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OnlineStatusService {
-  private uri: string = "https://ipv4.icanhazip.com/";
+  private uri: string = "https://storage.googleapis.com/shaka-demo-assets/";
   private timeout: number = 5000;
   private _isOnline: boolean;
+  private _request = null;
+  private _onlinePolling = null;
 
-  constructor() { }
+  constructor() {
 
-  // Does a simple http request to a website. Resolves to `true`, iff
-  // website loaded successfully.
-  private get isOnline$(): Observable<boolean> {
-    return from(new Promise((resolve, reject) => {
+    this._request = from(new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
       xhr.onerror = _ => resolve(false);
@@ -27,6 +26,21 @@ export class OnlineStatusService {
       
       xhr.send();
     }));
+
+    this._onlinePolling = timer(0, 5000).pipe(
+      mergeMap(_ => this.isOnline$),
+      tap(_ => console.log("Get online status")),
+    )
+  }
+
+  // Does a simple http request to a website. Resolves to `true`, iff
+  // website loaded successfully.
+  private get isOnline$(): Observable<boolean> {
+    return this._request;
+  }
+
+  get onlinePolling$(): Observable<number | boolean> {
+    return this._onlinePolling;
   }
 
   get isOnline(): boolean {
@@ -34,11 +48,8 @@ export class OnlineStatusService {
   }
 
   public start() {
-    timer(0, 5000).pipe(
-      mergeMap(_ => this.isOnline$),
-      tap(_ => console.log("Get online status")),
-    ).subscribe(
-      isOnline => isOnline ? this._isOnline = true : this._isOnline = false
+    this.onlinePolling$.subscribe(
+      online => online ? this._isOnline = true : this._isOnline = false
     );
   }
 
