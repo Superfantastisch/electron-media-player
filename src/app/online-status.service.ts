@@ -9,34 +9,36 @@ export class OnlineStatusService {
   private uri: string = "https://storage.googleapis.com/shaka-demo-assets/";
   private timeout: number = 5000;
   private _isOnline: boolean;
-  private _request = null;
   private _onlinePolling = null;
 
   constructor() {
+    this._onlinePolling = timer(0, 5000).pipe(
+      mergeMap(_ => this.isOnline$),
+      tap(online => console.log("Get online status: " + online)),
+    )
+  }
 
-    this._request = from(new Promise((resolve, reject) => {
+  private newRequest$(uri: string, timeout = this.timeout): Observable<boolean> {
+    return from(new Promise<boolean>((resolve) => {
       const xhr = new XMLHttpRequest();
 
       xhr.onerror = _ => resolve(false);
       xhr.ontimeout = _ => resolve(false);
       xhr.onload = _ => resolve(true);
 
-      xhr.open('GET', this.uri);
-      xhr.timeout = this.timeout;
+      xhr.open('GET', uri);
+      xhr.timeout = timeout;
       
       xhr.send();
     }));
-
-    this._onlinePolling = timer(0, 5000).pipe(
-      mergeMap(_ => this.isOnline$),
-      tap(_ => console.log("Get online status")),
-    )
   }
 
   // Does a simple http request to a website. Resolves to `true`, iff
   // website loaded successfully.
   private get isOnline$(): Observable<boolean> {
-    return this._request;
+    return this.newRequest$(this.uri).pipe(
+      map(online => this._isOnline = online),
+    );;
   }
 
   get onlinePolling$(): Observable<number | boolean> {
@@ -48,9 +50,7 @@ export class OnlineStatusService {
   }
 
   public start() {
-    this.onlinePolling$.subscribe(
-      online => online ? this._isOnline = true : this._isOnline = false
-    );
+    this.onlinePolling$.subscribe();
   }
 
 }
