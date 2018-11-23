@@ -1,3 +1,1 @@
-<mat-chip-list>
-    <mat-chip color="primary" disabled class="mat-basic-chip online-status" [ngStyle]="{'background-color':onlineStatusService.isOnline ? 'green' : 'grey'}">{{ onlineStatusService.isOnline | isOnline }}</mat-chip>
-</mat-chip-list>
+<button mat-button color="primary" id="#online-status" class="online-status" [ngStyle]="{'background-color':onlineStatusService.isOnline ? 'green' : 'grey'}" (click)="toggleOfflineMode()">{{ onlineStatusService.isOnline | isOnline }}</button>

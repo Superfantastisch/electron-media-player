@@ -3,6 +3,8 @@ import * as shaka from 'shaka-player';
 import { MovieService } from '../movie.service';
 import { IMovie } from '../models/movies';
 import { Router } from '@angular/router';
+import { from } from 'rxjs';
+import { retry } from 'rxjs/operators';
 
 const manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
 
@@ -48,10 +50,15 @@ export class StartPageComponent implements OnInit, AfterViewInit {
 
     // Try to load a manifest.
     // This is an asynchronous process.
-    player.load(manifestUri).then(() => {
-      // This runs if the asynchronous load is successful.
-      // console.log('The video has now been loaded!');
-    }).catch(onerror);  // onError is executed if the asynchronous load fails.
+    from(player.load(manifestUri)).pipe(
+      retry(3)
+    ).subscribe({
+      next: _ => console.log('The video has been loaded!'),
+      error: e => {
+        console.error("Error loading manifest:  " + e);
+        this.isLoading = false;
+      }
+    });
   }
 
   setupComponent(): void {

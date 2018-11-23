@@ -1,24 +1,24 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, timer } from 'rxjs';
-import { mergeMap, tap, map } from 'rxjs/operators';
+import { Observable, from, timer, Subject } from 'rxjs';
+import { mergeMap, tap, map, takeUntil } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OnlineStatusService {
-  private uri: string = "https://storage.googleapis.com/shaka-demo-assets/";
-  private timeout: number = 5000;
+  private DEFAULTS = {
+    uri: "https://storage.googleapis.com/shaka-demo-assets/",
+    timeout: 5000
+  };
+  private unsubscribe$ = new Subject();
   private _isOnline: boolean;
-  private _onlinePolling = null;
 
-  constructor() {
-    this._onlinePolling = timer(0, 5000).pipe(
-      mergeMap(_ => this.isOnline$),
-      tap(online => console.log("Get online status: " + online)),
-    )
-  }
+  constructor() { }
 
-  private newRequest$(uri: string, timeout = this.timeout): Observable<boolean> {
+  // Returns a simple http request to a website. Resolves to `true`, iff
+  // website loaded successfully.
+  private newRequest$(uri = this.DEFAULTS.uri, timeout = this.DEFAULTS.timeout)
+    : Observable<boolean> {
     return from(new Promise<boolean>((resolve) => {
       const xhr = new XMLHttpRequest();
 
@@ -33,16 +33,20 @@ export class OnlineStatusService {
     }));
   }
 
-  // Does a simple http request to a website. Resolves to `true`, iff
-  // website loaded successfully.
+  // Sets new online status if http request is done.
   private get isOnline$(): Observable<boolean> {
-    return this.newRequest$(this.uri).pipe(
+    return this.newRequest$().pipe(
       map(online => this._isOnline = online),
     );;
   }
 
+  // Creates http requests every x seconds to determine online status.
   get onlinePolling$(): Observable<number | boolean> {
-    return this._onlinePolling;
+    return timer(0, 5000).pipe(
+      mergeMap(_ => this.isOnline$),
+      tap(online => console.log("Get online status: " + online)),
+      takeUntil(this.unsubscribe$),
+    );
   }
 
   get isOnline(): boolean {
@@ -51,6 +55,14 @@ export class OnlineStatusService {
 
   public start() {
     this.onlinePolling$.subscribe();
+  }
+
+  public stop(offlineMode = true) {
+    if (offlineMode) {
+      this._isOnline = false;
+    }
+    
+    this.unsubscribe$.next();
   }
 
 }
