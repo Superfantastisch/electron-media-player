@@ -12,6 +12,7 @@ import { StartPageComponent } from './start-page/start-page.component';
 import { DetailPageComponent } from './detail-page/detail-page.component';
 import { OnlineStatusComponent } from './online-status/online-status.component';
 import { IsOnlinePipe } from './is-online.pipe';
+import { DownloadMovieComponent } from './download-movie/download-movie.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { IsOnlinePipe } from './is-online.pipe';
     StartPageComponent,
     DetailPageComponent,
     OnlineStatusComponent,
-    IsOnlinePipe
+    IsOnlinePipe,
+    DownloadMovieComponent
   ],
   imports: [
     BrowserModule,
