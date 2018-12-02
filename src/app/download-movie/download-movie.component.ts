@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import * as shaka from 'shaka-player'
 
 @Component({
   selector: 'app-download-movie',
