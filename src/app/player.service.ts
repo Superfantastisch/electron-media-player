@@ -27,6 +27,7 @@ export class PlayerService {
 
   public get player(): shaka.Player {
     if (!this._player) {
+      console.log("Create new player");
       this.initPlayer();
     }
     return this._player;
