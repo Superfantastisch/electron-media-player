@@ -1,0 +1,21 @@
+<section class="emp-detail-view">
+  <header>
+    <button mat-button (click)="goBack()">Back</button>
+  </header>
+  <div *ngIf="movie">
+    {{ movie | json }}
+  </div>
+  <section id="movie-section">
+    <h1 *ngIf="movie">
+      {{ movie.name }}
+    </h1>
+    <div>
+      Offline playback: {{isOfflinePlayback}}
+    </div>
+    <section class="emp-video-container">
+      <video #videoPlayer id='videoPlayer' controls poster="//shaka-player-demo.appspot.com/assets/poster.jpg" width="80%"></video>
+    </section>
+    <app-download-movie *ngIf="isPlayerReady" [movie]=movie></app-download-movie>
+  </section>
+
+</section>

@@ -1,0 +1,1 @@
+<button mat-button color="primary" id="#online-status" class="online-status" [ngStyle]="{'background-color':onlineStatusService.isOnline ? 'green' : 'grey'}" (click)="toggleOfflineMode()">{{ onlineStatusService.isOnline | isOnline }}</button>
