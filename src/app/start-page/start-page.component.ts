@@ -6,8 +6,6 @@ import { Router } from '@angular/router';
 import { from } from 'rxjs';
 import { retry } from 'rxjs/operators';
 
-const manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
-
 @Component({
   selector: 'app-start-page',
   templateUrl: './start-page.component.html',
@@ -21,6 +19,7 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   movies: Array<IMovie>;
   // video element
   video = null;
+  manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
 
   constructor(
     private movieService: MovieService,
@@ -50,12 +49,12 @@ export class StartPageComponent implements OnInit, AfterViewInit {
 
     // Try to load a manifest.
     // This is an asynchronous process.
-    from(player.load(manifestUri)).pipe(
+    from(player.load(this.manifestUri)).pipe(
       retry(3)
     ).subscribe({
       next: _ => console.log('The video has been loaded!'),
       error: e => {
-        console.error("Error loading manifest:  " + e);
+        console.error('Error loading manifest:  ' + e);
         this.isLoading = false;
       }
     });
@@ -74,11 +73,17 @@ export class StartPageComponent implements OnInit, AfterViewInit {
       console.error('Browser not supported!');
     }
   }
+  getRandomMovieManifestUrl(length: number = 1) {
+    const index = Math.floor((Math.random() * length) + 1);
+    console.log(this.movies[index].manifestUri);
+    this.manifestUri = this.movies[index].manifestUri;
+  }
   // get all movies from movies api
   getMovies(): void {
     this.movieService.movies$.subscribe(movies => {
       if (movies && movies.length > 0) {
         this.movies = movies;
+        this.getRandomMovieManifestUrl(this.movies.length - 1);
       }
     }, err => {
       console.error(err);
@@ -105,5 +110,4 @@ export class StartPageComponent implements OnInit, AfterViewInit {
     // after view init the video element/ shaka player should be initialized
     this.setupComponent();
   }
-
 }

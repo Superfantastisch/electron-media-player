@@ -6,7 +6,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class IsOnlinePipe implements PipeTransform {
 
   transform(isOnline: boolean): any {
-    return isOnline ? "Online" : "Offline";
+    return isOnline ? 'Online' : 'Offline';
   }
-
 }

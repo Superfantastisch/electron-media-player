@@ -80,7 +80,6 @@ export const MOVIES = [
         name: 'Clear, Live DASH',
         manifestUri: 'https://akamai-axtest.akamaized.net/routes/lapd-v1-acceptance/www_c4/Manifest.mpd',
     },
- 
     // }}}
 
     // Unified Streaming {{{
