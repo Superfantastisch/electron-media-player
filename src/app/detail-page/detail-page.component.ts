@@ -1,81 +1,128 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import * as shaka from 'shaka-player';
-import { MovieService } from '../movie.service';
 import { IMovie } from '../models/movies';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MATERIAL_SANITY_CHECKS_FACTORY } from '@angular/material/core/typings/common-behaviors/common-module';
-import { PlayerService } from '../player.service';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+
+import { DownloadMovieDialogComponent } from '../download-movie-dialog/download-movie-dialog.component';
+
+
 
 @Component({
   selector: 'app-detail-page',
   templateUrl: './detail-page.component.html',
   styleUrls: ['./detail-page.component.scss']
 })
-export class DetailPageComponent implements OnInit {
+export class DetailPageComponent implements OnInit, AfterViewInit {
   @ViewChild('videoPlayer') videoPlayer: ElementRef;
   movie: IMovie = null;
   isPlayerReady = false;
-  isOfflinePlayback = false;
+  player: shaka.Player;
+  private _video: HTMLVideoElement;
+
+  config: shaka.config;
+  /**
+   * display informations
+   */
+  // current resolution
+  videoResolution = '';
+  // The bandwidth required for the current streams (total, in bit/sec)
+  streamBandwidth = '';
+  // The current estimated network bandwidth (in bit/sec)
+  networkBandwith = '';
+
+  languages = new Array<String>();
+  variantTracks = new Array<shaka.shakaExtern.Track>();
 
   constructor(
-    private playerService: PlayerService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {}
+    private _router: Router,
+    private route: ActivatedRoute,
+    public dialog: MatDialog
+  ) { }
 
   goBack(): void {
-    this.router.navigate(['/']);
-  }
-
-  // Returns a promise that resolves to the manifest uri depending on offline availability
-  // Updates this.isOfflinePlayback accordingly.
-  private retrieveManifestUri(contents: Array<shaka.StoredContent>): Promise<string> {
-    return new Promise<string>(resolve => {
-      const localContent = contents.find(element => {
-        return element.originalManifestUri === this.movie.manifestUri;
-      });
-
-      if (localContent) {
-        console.log('Found locally saved video');
-        console.log('Title: ' + localContent.appMetadata.title);
-        console.log('Uri: ' + localContent.offlineUri);
-        this.isOfflinePlayback = true;
-        resolve(localContent.offlineUri);
-      } else {
-        this.isOfflinePlayback = false;
-        resolve(this.movie.manifestUri);
-      }
-    });
+    this._router.navigate(['/']);
   }
 
   initPlayer(): void {
-    const video = this.videoPlayer.nativeElement;
-    console.log(video);
-    const player = this.playerService.player;
+    this._video = this.videoPlayer.nativeElement;
+    this.player = new shaka.Player(this._video);
+    this.config = this.player.getConfiguration();
 
-    if (player) {
-      // Load offline manifest uri, if existent. Load online manifest uri, otherwise.
-      player
-        .attach(video)
-        .then(_ => {
-          const storage = new shaka.offline.Storage(player);
-          return storage.list();
-        })
-        .then(contents => {
-          return this.retrieveManifestUri(contents);
-        })
-        .then(manifestUri => {
-          return player.load(manifestUri);
-        })
-        .then(_ => {
-          // This runs if the asynchronous load is successful.
-          this.isPlayerReady = true;
-          console.log('The video has now been loaded!');
-        })
-        .catch(e => {
-          console.error(e);
-        });
+    setInterval(() => {
+      this._updateRoutine();
+    }, 1000);
+
+    // Listen for error events.
+    this.player.addEventListener('error', this.onErrorEvent);
+    this.player.addEventListener('adaption', (event) => {
+      const stats = this.player.getStats();
+      this._updateVideoResolution(stats);
+    });
+    this.player.addEventListener('trackschanged', (event) => {
+      const stats = this.player.getStats();
+      this._updateVideoResolution(stats);
+    });
+
+    if (this.player && this.movie) {
+      this.player.load(this.movie.manifestUri).then(() => {
+        // This runs if the asynchronous load is successful.
+        this.isPlayerReady = true;
+        // selectable languages
+        const languages = this.player.getAudioLanguages();
+        this.languages = languages;
+
+        const mfst = this.player.getManifest();
+
+        const variantTracks = this.player.getVariantTracks();
+        this.variantTracks = variantTracks;
+      }).catch(this.onError); // onError is executed if the asynchronous load fails.
     }
+  }
+
+  // Error handling
+  onErrorEvent(event) {
+    // Extract the shaka.util.Error object from the event.
+    this.onError(event.detail);
+  }
+
+  onError(error) {
+    // Log the error.
+    console.error('Error code', error.code, 'object', error);
+  }
+
+  // update informations
+  private _updateRoutine(): void {
+    const stats = this.player.getStats();
+    this._updateVideoResolution(stats);
+    this._updateBufferInformations(stats);
+  }
+  private _updateVideoResolution(stats: shaka.shakaExtern.stats): void {
+    this.videoResolution = `${stats.width} x ${stats.height}`;
+  }
+  private _updateBufferInformations(stats: shaka.shakaExtern.stats): void {
+    this.streamBandwidth = `Required Bandwith: ${stats.streamBandwidth} bit/sec`;
+    this.networkBandwith = `Current Bandwidth: ${stats.estimatedBandwidth} bit/sec`;
+  }
+
+
+  changeLanguage(val): void {
+    this.player.selectAudioLanguage(val);
+  }
+
+  changeResolution(val): void {
+    this.player.selectVariantTrack(val, true);
+  }
+
+  openDownloadDialog(): void {
+    const dialogRef = this.dialog.open(DownloadMovieDialogComponent, {
+      width: '33%',
+      data: {movie: this.movie, player: this.player}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+    });
   }
 
   ngOnInit() {
@@ -97,3 +144,4 @@ export class DetailPageComponent implements OnInit {
     this.initPlayer();
   }
 }
+

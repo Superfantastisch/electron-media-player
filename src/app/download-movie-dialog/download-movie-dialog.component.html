@@ -1,0 +1,27 @@
+<h3>Movie Title</h3>
+<form [formGroup]="movieDownloadForm">
+  <mat-form-field>
+    <mat-select formControlName="languages" (valueChange)="changeLanguage($event)" placeholder="Select Language">
+      <mat-option *ngFor="let language of languages" [value]="language">
+        {{ language }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select formControlName="quality" placeholder="Select Quality">
+      <mat-option *ngFor="let variant of variantTracks" [value]="variant">
+        {{ variant.width + " x " + variant.height }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+</form>
+<div>
+  {{ movieDownloadForm.status }}
+</div>
+<div>
+  {{ movieDownloadForm.valid }}
+</div>
+<div>
+  <button [disabled]="!movieDownloadForm.valid" (click)="onDownload()">Download</button>
+</div>
