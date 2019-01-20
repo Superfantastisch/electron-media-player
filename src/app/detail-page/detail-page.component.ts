@@ -48,6 +48,8 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     this._video = this.videoPlayer.nativeElement;
     this.player = new shaka.Player(this._video);
     this.config = this.player.getConfiguration();
+    console.log('config');
+    console.log(this.config);
 
     setInterval(() => {
       this._updateRoutine();
@@ -56,10 +58,12 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     // Listen for error events.
     this.player.addEventListener('error', this.onErrorEvent);
     this.player.addEventListener('adaption', (event) => {
+      console.log('adaption');
       const stats = this.player.getStats();
       this._updateVideoResolution(stats);
     });
     this.player.addEventListener('trackschanged', (event) => {
+      console.log('trackschanged');
       const stats = this.player.getStats();
       this._updateVideoResolution(stats);
     });
@@ -69,13 +73,17 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
         // This runs if the asynchronous load is successful.
         this.isPlayerReady = true;
         // selectable languages
-        const languages = this.player.getAudioLanguages();
-        this.languages = languages;
+        this.languages = this.player.getAudioLanguages();
 
+        // log some informations
         const mfst = this.player.getManifest();
+        console.log('manifest');
+        console.log(mfst);
+        const networkEngine = this.player.getNetworkingEngine();
+        console.log('network engine');
+        console.log(networkEngine);
 
-        const variantTracks = this.player.getVariantTracks();
-        this.variantTracks = variantTracks;
+        this.variantTracks = this.player.getVariantTracks();
       }).catch(this.onError); // onError is executed if the asynchronous load fails.
     }
   }

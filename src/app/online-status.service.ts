@@ -37,7 +37,7 @@ export class OnlineStatusService {
   private get isOnline$(): Observable<boolean> {
     return this.newRequest$().pipe(
       map(online => this._isOnline = online),
-    );;
+    );
   }
 
   // Creates http requests every x seconds to determine online status.

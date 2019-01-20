@@ -1,5 +1,5 @@
-<h3>Movie Title</h3>
-<form [formGroup]="movieDownloadForm">
+<h3>{{ data.movie.name }}</h3>
+<form [formGroup]="movieDownloadForm" fxLayout="column">
   <mat-form-field>
     <mat-select formControlName="languages" (valueChange)="changeLanguage($event)" placeholder="Select Language">
       <mat-option *ngFor="let language of languages" [value]="language">
@@ -14,14 +14,8 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-
 </form>
-<div>
-  {{ movieDownloadForm.status }}
-</div>
-<div>
-  {{ movieDownloadForm.valid }}
-</div>
-<div>
-  <button [disabled]="!movieDownloadForm.valid" (click)="onDownload()">Download</button>
+<div fxLayout="row" fxLayoutGap="1em">
+  <button mat-raised-button [disabled]="!movieDownloadForm.valid" (click)="onDownload()">Download</button>
+  <button mat-raised-button color="warn" (click)="onCancel()">Cancel</button>
 </div>

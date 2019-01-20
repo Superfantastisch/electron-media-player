@@ -9,10 +9,11 @@ export class PlayerService {
   private _player: shaka.Player = null;
 
   constructor() {
-    console.log("player service");
+    console.log('player service constructor init player');
+    this._initPlayer();
   }
 
-  public initPlayer(): void {
+  private _initPlayer(): void {
     // Install built-in polyfills to patch browser incompatibilities.
     shaka.polyfill.installAll();
 
@@ -25,10 +26,10 @@ export class PlayerService {
     }
   }
 
-  public get player(): shaka.Player {
+  public get Player(): shaka.Player {
     if (!this._player) {
-      console.log("Create new player");
-      this.initPlayer();
+      console.log('Create new player');
+      this._initPlayer();
     }
     return this._player;
   }
