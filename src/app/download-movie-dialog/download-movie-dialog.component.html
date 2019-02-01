@@ -9,7 +9,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-select formControlName="quality" placeholder="Select Quality">
-      <mat-option *ngFor="let variant of variantTracks" [value]="variant">
+      <mat-option *ngFor="let variant of langVariantTracks" [value]="variant">
         {{ variant.width + " x " + variant.height }}
       </mat-option>
     </mat-select>

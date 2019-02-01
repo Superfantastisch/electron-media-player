@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import * as shaka from 'shaka-player';
-import { MovieService } from '../movie.service';
+import { MovieService } from '../services/movie.service';
 import { IMovie } from '../models/movies';
 import { Router } from '@angular/router';
 import { from } from 'rxjs';
