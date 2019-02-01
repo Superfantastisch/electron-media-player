@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 import { DownloadMovieDialogComponent } from '../download-movie-dialog/download-movie-dialog.component';
+import { MovieService } from '../services/movie.service';
 
 
 
@@ -19,6 +20,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   isPlayerReady = false;
   player: shaka.Player;
   private _video: HTMLVideoElement;
+  private _storage: shaka.offline.Storage = null;
 
   config: shaka.config;
   /**
@@ -37,7 +39,8 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   constructor(
     private _router: Router,
     private route: ActivatedRoute,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private _movieService: MovieService
   ) { }
 
   goBack(): void {
@@ -129,7 +132,22 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
+      if (result) {
+        console.log('download result');
+        console.log(result);
+      }
+    });
+  }
+  // delete downloaded movie
+  deleteMovie(): void {
+    this._movieService.removeOfflineMovie(this.movie).then((m) => {
+      this._storage.remove(this.movie.offlineUri);
+      console.log('storage after remove');
+      console.log(this._storage.list());
+      this.movie = m;
+    }, (err) => {
+      console.error('error no removing offline movie');
+      console.error(err);
     });
   }
 

@@ -22,10 +22,35 @@ export class MovieService {
     return this._movies$.asObservable();
   }
 
-  addOfflineMovies(movie: any): void {
-    // Todo: complete update movie function
+  addOfflineMovie(offlineContent: any): void {
+    // try add offline uri
+    try {
+      this._movies$.value.forEach((movie) => {
+        if (movie.manifestUri === offlineContent.originalManifestUri) {
+          movie.offlineUri = offlineContent.offlineUri;
+          console.log('success on updating movie list');
+          console.log(movie.offlineUri);
+        }
+      });
+      this._movies$.next(this._movies$.value);
+    } catch (error) {
+      console.error('could not add offline uri');
+    }
   }
-  removeOfflineMovies(movie: any): void {
-    // Todo: complete update movie function
+  async removeOfflineMovie(movie: any): Promise<IMovie> {
+    try {
+      let returnMovie = null;
+      // remove offline uri from list
+      this._movies$.value.forEach((m) => {
+        if (m.manifestUri === movie.manifestUri) {
+          m.offlineUri = null;
+          returnMovie = m;
+        }
+      });
+      this._movies$.next(this._movies$.value);
+      return returnMovie;
+    } catch (error) {
+      console.error('could not add offline uri');
+    }
   }
 }

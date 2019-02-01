@@ -3,6 +3,9 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import * as shaka from 'shaka-player';
 import { throwError } from 'rxjs';
+import { MovieService } from '../services/movie.service';
+import { PlayerService } from '../services/player.service';
+import { BehaviorSubject } from 'rxjs';
 @Component({
   selector: 'app-download-movie-dialog',
   templateUrl: './download-movie-dialog.component.html',
@@ -13,8 +16,13 @@ export class DownloadMovieDialogComponent implements OnInit {
   variantTracks = new Array<shaka.shakaExtern.Track>();
   // variant tracks filterd by language selection
   langVariantTracks = new Array<shaka.shakaExtern.Track>();
+  // tracks who finaly should be downloaded
+  finalVariantTracks = new Array<shaka.shakaExtern.Track>();
+  // value for progressbar
+  downloadProgress$ = new BehaviorSubject<number>(0);
+
   title = '';
-  storage: shaka.offline.Storage = null;
+  private _storage: shaka.offline.Storage = null;
 
   movieDownloadForm = this._fb.group({
     quality: ['', Validators.required],
@@ -23,32 +31,33 @@ export class DownloadMovieDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<DownloadMovieDialogComponent>,
+    private _movieService: MovieService,
+    private _playerService: PlayerService,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private _fb: FormBuilder
   ) { }
 
   // dialog control buttons
   onDownload(): void {
-    console.log('submit');
-    console.log(this.movieDownloadForm.value);
-    console.log(this.movieDownloadForm.controls.languages.valid);
     // reset download progress
-    this.setDownloadProgress(0);
-    this.downloadContent(this.data.movie.manifestUri, this.data.movie.name).then(() => {
+    this.setDownloadProgress(null, 0);
+    this.downloadContent(this.data.movie.manifestUri, this.data.movie.name).then((content) => {
       console.log('success on downlaod');
       // download progress on 100%
-      this.setDownloadProgress(1);
+      this.setDownloadProgress(null, 1);
       console.log('offline list');
-      console.log(this.storage.list());
-    })
-      .catch((error) => {
-        // In the case of an error, re-enable the download button so
-        // that the user can try to download another item.
-        console.error(error);
-      });
+      console.log(this._storage.list());
+
+      this._movieService.addOfflineMovie(content);
+      this.dialogRef.close(content);
+    }).catch((error) => {
+      // In the case of an error, re-enable the download button so
+      // that the user can try to download another item.
+      console.error(error);
+    });
   }
   onCancel(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(null);
   }
 
   // business logic for language change
@@ -62,8 +71,23 @@ export class DownloadMovieDialogComponent implements OnInit {
       } catch (error) {
         console.error('can not filter variant tracks by language');
         console.error(error);
+      } finally {
+        this.movieDownloadForm.controls['quality'].enable();
       }
-      this.movieDownloadForm.controls['quality'].enable();
+    }
+  }
+  // business logic for quality change
+  changeQuality(event) {
+    if (event && event !== '') {
+      try {
+        this.finalVariantTracks = this.langVariantTracks
+          .filter(vt => vt.with === event.with && vt.height === event.height && vt.bandwidth === event.bandwidth);
+        console.log('final download tracks on change quality');
+        console.log(this.finalVariantTracks);
+      } catch (error) {
+        console.error('can not filter variant tracks by quality');
+        console.error(error);
+      }
     }
   }
   updateOnlineStatus(): boolean {
@@ -71,24 +95,22 @@ export class DownloadMovieDialogComponent implements OnInit {
     console.log(navigator.onLine);
     return navigator.onLine;
   }
-  setDownloadProgress(progress: number): void {
-    console.log('set download progress');
-    console.log(progress);
+  setDownloadProgress = (content: any, progress: number) => {
+    const x = progress * 100;
+    this.downloadProgress$.next(x);
   }
 
   selectTracks = () => {
     try {
-      if (this.variantTracks && this.variantTracks.length > 0) {
-        return this.langVariantTracks;
+      if (this.finalVariantTracks && this.finalVariantTracks.length > 0) {
+        return this.finalVariantTracks;
       } else {
-        throw new RangeError('no variant tracks available');
+        throw new RangeError('no variant tracks available on download');
       }
     } catch (error) {
       console.error('could not select tracks');
       console.error(error);
     }
-    // return [found];
-    // Store the highest bandwidth variant.
   }
 
   downloadContent(manifestUri, name) {
@@ -100,15 +122,15 @@ export class DownloadMovieDialogComponent implements OnInit {
       'downloaded': Date()
     };
 
-    return this.storage.store(manifestUri, metadata);
+    return this._storage.store(manifestUri, metadata);
   }
 
-  initStorage(player: shaka.Player) {
+  initStorage() {
     // Create a storage instance and configure it with optional
     // callbacks. Set the progress callback so that we visualize
     // download progress and override the track selection callback.
-    this.storage = new shaka.offline.Storage(player);
-    this.storage.configure({
+    this._storage = this._playerService.Storage;
+    this._storage.configure({
       progressCallback: this.setDownloadProgress,
       trackSelectionCallback: this.selectTracks
     });
@@ -120,9 +142,6 @@ export class DownloadMovieDialogComponent implements OnInit {
     // disable quality select on init since it is related to the language
     this.movieDownloadForm.get('quality').disable();
     this.updateOnlineStatus();
-    this.initStorage(this.data.player);
-    console.log('storage list');
-    console.log(this.storage.list());
+    this.initStorage();
   }
-
 }
