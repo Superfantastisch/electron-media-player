@@ -6,6 +6,10 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 import { DownloadMovieDialogComponent } from '../download-movie-dialog/download-movie-dialog.component';
 import { MovieService } from '../services/movie.service';
+import { PlayerService } from '../services/player.service';
+
+import { from } from 'rxjs';
+import { retry } from 'rxjs/operators';
 
 
 
@@ -18,11 +22,10 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   @ViewChild('videoPlayer') videoPlayer: ElementRef;
   movie: IMovie = null;
   isPlayerReady = false;
-  player: shaka.Player;
+  private _player: shaka.Player;
   private _video: HTMLVideoElement;
   private _storage: shaka.offline.Storage = null;
 
-  config: shaka.config;
   /**
    * display informations
    */
@@ -32,7 +35,6 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   streamBandwidth = '';
   // The current estimated network bandwidth (in bit/sec)
   networkBandwith = '';
-
   languages = new Array<String>();
   variantTracks = new Array<shaka.shakaExtern.Track>();
 
@@ -40,7 +42,8 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     private _router: Router,
     private route: ActivatedRoute,
     public dialog: MatDialog,
-    private _movieService: MovieService
+    private _movieService: MovieService,
+    private _playerService: PlayerService
   ) { }
 
   goBack(): void {
@@ -49,48 +52,57 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
 
   initPlayer(): void {
     this._video = this.videoPlayer.nativeElement;
-    this.player = new shaka.Player(this._video);
-    this.config = this.player.getConfiguration();
-    console.log('config');
-    console.log(this.config);
-
-    setInterval(() => {
-      this._updateRoutine();
-    }, 1000);
-
-    // Listen for error events.
-    this.player.addEventListener('error', this.onErrorEvent);
-    this.player.addEventListener('adaption', (event) => {
-      console.log('adaption');
-      const stats = this.player.getStats();
-      this._updateVideoResolution(stats);
+    this._player = this._playerService.Player;
+    this._player.attach(this._video).then(() => {
+      // Listen for events.
+      this._player.addEventListener('error', this.onErrorEvent);
+      this._player.addEventListener('adaption', (event) => {
+        const stats = this._player.getStats();
+        this._updateVideoResolution(stats);
+      });
+      this._player.addEventListener('trackschanged', (event) => {
+        const stats = this._player.getStats();
+        this._updateVideoResolution(stats);
+      });
+      // update stats
+      setInterval(() => {
+        this._updateRoutine();
+      }, 1000);
+      // Try to load a manifest.
+      // This is an asynchronous process.
+      this._playVideo();
     });
-    this.player.addEventListener('trackschanged', (event) => {
-      console.log('trackschanged');
-      const stats = this.player.getStats();
-      this._updateVideoResolution(stats);
-    });
-
-    if (this.player && this.movie) {
-      this.player.load(this.movie.manifestUri).then(() => {
-        // This runs if the asynchronous load is successful.
-        this.isPlayerReady = true;
-        // selectable languages
-        this.languages = this.player.getAudioLanguages();
-
-        // log some informations
-        const mfst = this.player.getManifest();
-        console.log('manifest');
-        console.log(mfst);
-        const networkEngine = this.player.getNetworkingEngine();
-        console.log('network engine');
-        console.log(networkEngine);
-
-        this.variantTracks = this.player.getVariantTracks();
-      }).catch(this.onError); // onError is executed if the asynchronous load fails.
-    }
   }
-
+  // load resources and play Video
+  private _playVideo() {
+    // this.movie.offlineUri = result.offlineUri;
+    this._player.unload().then(() => {
+      console.log('unload video');
+      let manifestUri = null;
+      console.log('play offline uri');
+      console.log(this.movie.offlineUri);
+      if (this.movie.offlineUri && this.movie.offlineUri !== 'null') {
+        console.log('offline uri');
+        manifestUri = this.movie.offlineUri;
+      } else {
+        manifestUri = this.movie.manifestUri;
+      }
+      console.log('mainifest uri');
+      console.log(manifestUri);
+      from(this._player.load(manifestUri)).pipe(
+        retry(3)
+      ).subscribe({
+        next: _ => {
+          this._video.play();
+          this.variantTracks = this._player.getVariantTracks();
+        },
+        error: e => {
+          console.error('Error loading manifest:  ' + e);
+          // this.isLoading = false;
+        }
+      });
+    });
+  }
   // Error handling
   onErrorEvent(event) {
     // Extract the shaka.util.Error object from the event.
@@ -104,7 +116,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
 
   // update informations
   private _updateRoutine(): void {
-    const stats = this.player.getStats();
+    const stats = this._player.getStats();
     this._updateVideoResolution(stats);
     this._updateBufferInformations(stats);
   }
@@ -117,37 +129,43 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   }
 
 
+
+
   changeLanguage(val): void {
-    this.player.selectAudioLanguage(val);
+    this._player.selectAudioLanguage(val);
   }
 
   changeResolution(val): void {
-    this.player.selectVariantTrack(val, true);
+    this._player.selectVariantTrack(val, true);
   }
 
   openDownloadDialog(): void {
     const dialogRef = this.dialog.open(DownloadMovieDialogComponent, {
       width: '33%',
-      data: {movie: this.movie, player: this.player}
+      data: { movie: this.movie, player: this._player }
     });
-
+    // on closing dialog
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log('download result');
+        console.log('success');
         console.log(result);
+        console.log(this.movie);
+        const mClone = Object.assign({}, this.movie);
+        mClone.offlineUri = result.offlineUri;
+        this.movie = mClone;
+        this._movieService.updateMovies(this._storage);
+        this._playVideo();
       }
     });
   }
   // delete downloaded movie
   deleteMovie(): void {
-    this._movieService.removeOfflineMovie(this.movie).then((m) => {
-      this._storage.remove(this.movie.offlineUri);
-      console.log('storage after remove');
-      console.log(this._storage.list());
-      this.movie = m;
-    }, (err) => {
-      console.error('error no removing offline movie');
-      console.error(err);
+    this._storage.remove(this.movie.offlineUri).then(val => {
+      const mClone = Object.assign({}, this.movie);
+      mClone.offlineUri = 'null';
+      this.movie = mClone;
+      this._movieService.updateMovies(this._storage);
+      this._playVideo();
     });
   }
 
@@ -161,8 +179,10 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
       err => {
         console.error('can not get movie');
         console.error(err);
+        // Todo: bring the error for the user on screen
       }
     );
+    this._storage = this._playerService.Storage;
   }
 
   ngAfterViewInit() {

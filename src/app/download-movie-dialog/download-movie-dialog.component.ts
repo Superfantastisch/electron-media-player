@@ -31,7 +31,6 @@ export class DownloadMovieDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<DownloadMovieDialogComponent>,
-    private _movieService: MovieService,
     private _playerService: PlayerService,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private _fb: FormBuilder
@@ -41,14 +40,11 @@ export class DownloadMovieDialogComponent implements OnInit {
   onDownload(): void {
     // reset download progress
     this.setDownloadProgress(null, 0);
+    // on success return shakaExtern.StoredContent
     this.downloadContent(this.data.movie.manifestUri, this.data.movie.name).then((content) => {
-      console.log('success on downlaod');
       // download progress on 100%
       this.setDownloadProgress(null, 1);
-      console.log('offline list');
-      console.log(this._storage.list());
-
-      this._movieService.addOfflineMovie(content);
+      // close dialog
       this.dialogRef.close(content);
     }).catch((error) => {
       // In the case of an error, re-enable the download button so
@@ -65,8 +61,6 @@ export class DownloadMovieDialogComponent implements OnInit {
     if (event && event !== '') {
       try {
         this.langVariantTracks = this.variantTracks.filter(vt => vt.language === event);
-        console.log('variant tracks on change language');
-        console.log(this.langVariantTracks);
         this.movieDownloadForm.get('quality').setValue('');
       } catch (error) {
         console.error('can not filter variant tracks by language');
@@ -82,8 +76,6 @@ export class DownloadMovieDialogComponent implements OnInit {
       try {
         this.finalVariantTracks = this.langVariantTracks
           .filter(vt => vt.with === event.with && vt.height === event.height && vt.bandwidth === event.bandwidth);
-        console.log('final download tracks on change quality');
-        console.log(this.finalVariantTracks);
       } catch (error) {
         console.error('can not filter variant tracks by quality');
         console.error(error);
@@ -91,8 +83,6 @@ export class DownloadMovieDialogComponent implements OnInit {
     }
   }
   updateOnlineStatus(): boolean {
-    console.log('online status');
-    console.log(navigator.onLine);
     return navigator.onLine;
   }
   setDownloadProgress = (content: any, progress: number) => {
@@ -119,7 +109,8 @@ export class DownloadMovieDialogComponent implements OnInit {
     // content.
     const metadata = {
       'title': name,
-      'downloaded': Date()
+      'downloaded': Date(),
+      'imageUrl': this.data.movie.imageUrl
     };
 
     return this._storage.store(manifestUri, metadata);

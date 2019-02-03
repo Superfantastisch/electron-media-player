@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { MOVIES, IMovie } from '../models/movies';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-
+import * as shaka from 'shaka-player';
 
 /**
- * Warning: this service could produce inconsistent data, since we are using the movie title as an identifyer
+ * Warning: this service could produce inconsistent data, since we are using the movie mpd file as an identifyer
  */
 @Injectable({
   providedIn: 'root'
@@ -17,40 +17,53 @@ export class MovieService {
   constructor(
     private readonly http: HttpClient
   ) { }
-
+  // brings the availabel movie list to the components of this application
   get movies$(): Observable<Array<IMovie>> {
     return this._movies$.asObservable();
   }
-
-  addOfflineMovie(offlineContent: any): void {
-    // try add offline uri
-    try {
-      this._movies$.value.forEach((movie) => {
-        if (movie.manifestUri === offlineContent.originalManifestUri) {
-          movie.offlineUri = offlineContent.offlineUri;
-          console.log('success on updating movie list');
-          console.log(movie.offlineUri);
-        }
-      });
-      this._movies$.next(this._movies$.value);
-    } catch (error) {
-      console.error('could not add offline uri');
-    }
+  /**
+   * helper function to map shaka-player offline objects to our IMovie objects
+   */
+  private _createIMovie(stContent: shaka.shakaExtern.StoredContent): IMovie {
+    console.log('stContent createIMovie');
+    console.log(stContent);
+    return {
+      name: stContent.appMetadata.title,
+      manifestUri: stContent.originalManifestUri,
+      offlineUri: stContent.offlineUri,
+      imageUrl: stContent.appMetadata.imageUrl
+    };
   }
-  async removeOfflineMovie(movie: any): Promise<IMovie> {
+/**
+ * this function merges the offline available movies with the movie list from our fake movie services
+ * the list is created while comparing the mpd file url's
+ * this is not a good solution but what ever works for the demo
+ */
+  updateMovies(storage: shaka.offline.Storage): void {
+    console.log('update movies');
     try {
-      let returnMovie = null;
-      // remove offline uri from list
-      this._movies$.value.forEach((m) => {
-        if (m.manifestUri === movie.manifestUri) {
-          m.offlineUri = null;
-          returnMovie = m;
-        }
+      storage.list().then(oList => {
+        // current movie list
+        const ml = this._movies$.value;
+        // current offline list
+        const nol = oList.map(this._createIMovie);
+        const intersection = ml.filter((mlMovie) => {
+          return nol.map((nolMovie) => {
+            return nolMovie.manifestUri;
+          }).indexOf(mlMovie.manifestUri) < 0;
+        });
+
+        // remove offlineUris from onlinelist
+        intersection.forEach(val => {
+          val.offlineUri = '';
+        });
+       // concat offline and filterd list
+        const res = [...nol, ...intersection];
+        this._movies$.next(res);
       });
-      this._movies$.next(this._movies$.value);
-      return returnMovie;
     } catch (error) {
-      console.error('could not add offline uri');
+      console.error('could not update movie list');
+      console.error(error);
     }
   }
 }

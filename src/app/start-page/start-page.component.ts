@@ -3,7 +3,7 @@ import * as shaka from 'shaka-player';
 import { MovieService } from '../services/movie.service';
 import { IMovie } from '../models/movies';
 import { Router } from '@angular/router';
-import { from } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { retry } from 'rxjs/operators';
 import { PlayerService } from '../services/player.service';
 
@@ -17,13 +17,15 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   // show loading spinner until video element is loaded
   isLoading = true;
   // movies collection
-  movies: Array<IMovie>;
+  movies$: Observable<Array<IMovie>>;
   // video element
   video: HTMLVideoElement = null;
   manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
+  // storage
+  private _storage: shaka.offline.Storage;
 
   constructor(
-    private movieService: MovieService,
+    private _movieService: MovieService,
     private readonly _playerService: PlayerService,
     private router: Router
   ) { }
@@ -43,8 +45,6 @@ export class StartPageComponent implements OnInit, AfterViewInit {
     };
 
     const player = this._playerService.Player;
-    console.log('init player');
-    console.log(player);
     // attach media element
     player.attach(this.video).then(() => {
       // Try to load a manifest.
@@ -63,19 +63,10 @@ export class StartPageComponent implements OnInit, AfterViewInit {
 
   getRandomMovieManifestUrl(length: number = 1) {
     const index = Math.floor((Math.random() * length) + 1);
-    console.log(this.movies[index].manifestUri);
-    this.manifestUri = this.movies[index].manifestUri;
   }
   // get all movies from movies api
   getMovies(): void {
-    this.movieService.movies$.subscribe(movies => {
-      if (movies && movies.length > 0) {
-        this.movies = movies;
-        this.getRandomMovieManifestUrl(this.movies.length - 1);
-      }
-    }, err => {
-      console.error(err);
-    });
+    this.movies$ = this._movieService.movies$;
   }
 
   // checking for scroll events
@@ -90,6 +81,13 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    // update the movies list
+    this._storage = this._playerService.Storage;
+    if (this._storage) {
+      this._movieService.updateMovies(this._storage);
+    } else {
+      console.error('no storage, could not update movies');
+    }
     // get the movies list from the mocked movies api
     this.getMovies();
   }
