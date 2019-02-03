@@ -23,6 +23,9 @@
         </mat-form-field>
         <mat-form-field>
           <mat-select placeholder="Select Resolution" (selectionChange)="changeResolution($event.value)">
+            <mat-option>
+              Adaptive
+            </mat-option>
             <mat-option *ngFor="let variant of variantTracks" [value]="variant">
               {{ variant.width + " x " + variant.height }}
             </mat-option>

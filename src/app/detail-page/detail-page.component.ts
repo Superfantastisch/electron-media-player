@@ -136,7 +136,14 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   }
 
   changeResolution(val): void {
-    this._player.selectVariantTrack(val, true);
+    if (val) {
+      // Disable adaptive streaming in favor of constant resolution
+      this._player.configure({abr: {enabled: false}});
+      this._player.selectVariantTrack(val, true);
+    } else {
+      // Set to adaptive streaming
+      this._player.configure({abr: {enabled: true}});
+    }
   }
 
   openDownloadDialog(): void {
