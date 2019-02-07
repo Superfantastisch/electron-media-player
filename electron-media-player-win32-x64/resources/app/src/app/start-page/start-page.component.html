@@ -1,0 +1,22 @@
+<!-- background video layer -->
+<section class="emp-preview-video-container">
+  <video #videoPlayer autoplay loop></video>
+</section>
+<!-- movies menu layer -->
+<menu class="emp-movie-menu" (scroll)="onScroll($event)">
+  <div class="emp-movie-menu-container" *ngIf="movies" fxLayout="row wrap">
+    <div class="emp-movie-menu-container-item" *ngFor="let movie of movies" fxFlex="15%" fxFlexAlign="center"
+      (click)="selectMovie(movie)">
+      <img *ngIf="movie.imageUrl !== ''" src="assets/{{movie.imageUrl}}" alt="">
+      <img *ngIf="!movie.imageUrl" src="assets/no-cover-img.jpg" alt="">
+      <div class="download-icon" *ngIf="movie.offlineUri !== ''">
+        <button color="primary" mat-fab>
+          <mat-icon aria-label="download icon">get_app</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</menu>
+<!-- <section class="emp-loading" *ngIf="isLoading">
+  <img src="assets/rings.svg" alt="rings">
+</section> -->

@@ -1,0 +1,24 @@
+<h3>{{ data.movie.name }}</h3>
+<form [formGroup]="movieDownloadForm" fxLayout="column">
+  <mat-form-field>
+    <mat-select formControlName="languages" (valueChange)="changeLanguage($event)" placeholder="Select Language">
+      <mat-option *ngFor="let language of languages" [value]="language">
+        {{ language }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select formControlName="quality" (valueChange)="changeQuality($event)" placeholder="Select Quality">
+      <mat-option *ngFor="let variant of langVariantTracks" [value]="variant">
+        {{ variant.width + " x " + variant.height + " - " + variant.bandwidth }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</form>
+<section class="progress-bar">
+  <mat-progress-bar mode="determinate" color="warn" [value]="downloadProgress$ | async"></mat-progress-bar>
+</section>
+<div fxLayout="row" fxLayoutGap="1em">
+  <button mat-raised-button [disabled]="!movieDownloadForm.valid" (click)="onDownload()">Download</button>
+  <button mat-raised-button color="warn" (click)="onCancel()">Cancel</button>
+</div>

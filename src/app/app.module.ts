@@ -19,7 +19,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { StartPageComponent } from './start-page/start-page.component';
 import { DetailPageComponent } from './detail-page/detail-page.component';
-import { OnlineStatusComponent } from './online-status/online-status.component';
 import { IsOnlinePipe } from './is-online.pipe';
 import { DownloadMovieDialogComponent } from './download-movie-dialog/download-movie-dialog.component';
 
@@ -28,7 +27,6 @@ import { DownloadMovieDialogComponent } from './download-movie-dialog/download-m
     AppComponent,
     StartPageComponent,
     DetailPageComponent,
-    OnlineStatusComponent,
     IsOnlinePipe,
     DownloadMovieDialogComponent
   ],
