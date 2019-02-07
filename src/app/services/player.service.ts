@@ -10,7 +10,6 @@ export class PlayerService {
   private _storage: shaka.offline.Storage = null;
 
   constructor() {
-    console.log('player service constructor init player');
     this._initPlayer();
   }
 
@@ -38,7 +37,6 @@ export class PlayerService {
 
   public get Player(): shaka.Player {
     if (!this._player) {
-      console.log('Create new player');
       this._initPlayer();
     }
     return this._player;

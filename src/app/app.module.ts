@@ -5,7 +5,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatButtonModule, MatDialogModule, MatIconModule, MatListModule, MatProgressBarModule, MatSelectModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatDialogModule,
+  MatIconModule,
+   MatListModule,
+   MatProgressBarModule,
+   MatSelectModule,
+   MatSnackBarModule } from '@angular/material';
 import {MatChipsModule} from '@angular/material/chips';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -34,7 +41,7 @@ import { DownloadMovieDialogComponent } from './download-movie-dialog/download-m
     AppRoutingModule,
     HttpClientModule,
     FlexLayoutModule,
-    MatButtonModule, MatDialogModule, MatIconModule, MatListModule, MatProgressBarModule, MatSelectModule,
+    MatButtonModule, MatDialogModule, MatIconModule, MatListModule, MatProgressBarModule, MatSelectModule, MatSnackBarModule,
     MatChipsModule,
     ReactiveFormsModule
   ],

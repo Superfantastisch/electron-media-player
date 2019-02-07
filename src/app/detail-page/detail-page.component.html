@@ -38,12 +38,12 @@
         <mat-list-item>{{ networkBandwith }}</mat-list-item>
       </mat-list>
       <section>
-        <div *ngIf="movie.offlineUri === 'null' || movie.offlineUri === ''">
+        <div *ngIf="movie.offlineUri === ''">
           <button mat-raised-button (click)="openDownloadDialog()">
             <mat-icon>get_app</mat-icon>Download
           </button>
         </div>
-        <div *ngIf="movie.offlineUri !== 'null' && movie.offlineUri !== ''">
+        <div *ngIf="movie.offlineUri !== ''">
           <button mat-raised-button (click)="deleteMovie()" color="warn">
             <mat-icon>delete</mat-icon>Delete
           </button>

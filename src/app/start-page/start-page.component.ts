@@ -1,23 +1,29 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import * as shaka from 'shaka-player';
 import { MovieService } from '../services/movie.service';
 import { IMovie } from '../models/movies';
 import { Router } from '@angular/router';
-import { from, Observable } from 'rxjs';
+import { from, Subscription } from 'rxjs';
 import { retry } from 'rxjs/operators';
 import { PlayerService } from '../services/player.service';
+import { OnlineStatusService } from '../online-status.service';
 
 @Component({
   selector: 'app-start-page',
   templateUrl: './start-page.component.html',
   styleUrls: ['./start-page.component.scss']
 })
-export class StartPageComponent implements OnInit, AfterViewInit {
+export class StartPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('videoPlayer') videoPlayer: ElementRef;
+  player: shaka.Player = null;
   // show loading spinner until video element is loaded
   isLoading = true;
   // movies collection
-  movies$: Observable<Array<IMovie>>;
+  movies$: Subscription;
+  movies: Array<IMovie> = [];
+  // isOnline
+  isOnline$: Subscription;
+  isOnline = false;
   // video element
   video: HTMLVideoElement = null;
   manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
@@ -27,7 +33,8 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   constructor(
     private _movieService: MovieService,
     private readonly _playerService: PlayerService,
-    private router: Router
+    private router: Router,
+    private _onlineStatusService: OnlineStatusService
   ) { }
 
   selectMovie(movie: IMovie) {
@@ -44,29 +51,53 @@ export class StartPageComponent implements OnInit, AfterViewInit {
       this.isLoading = false;
     };
 
-    const player = this._playerService.Player;
+    this.player = this._playerService.Player;
     // attach media element
-    player.attach(this.video).then(() => {
+    this.player.attach(this.video).then(() => {
       // Try to load a manifest.
       // This is an asynchronous process.
-      from(player.load(this.manifestUri)).pipe(
-        retry(3)
-      ).subscribe({
-        next: _ => this.video.play(),
-        error: e => {
-          console.error('Error loading manifest:  ' + e);
-          this.isLoading = false;
-        }
-      });
+      if (this.isOnline) {
+        from(this.player.load(this.manifestUri)).pipe(
+          retry(3)
+        ).subscribe({
+          next: _ => this.video.play(),
+          error: e => {
+            console.error('Error loading manifest:  ' + e);
+            this.isLoading = false;
+          }
+        });
+      }
     });
-  }
-
-  getRandomMovieManifestUrl(length: number = 1) {
-    const index = Math.floor((Math.random() * length) + 1);
   }
   // get all movies from movies api
   getMovies(): void {
-    this.movies$ = this._movieService.movies$;
+    // movies subscription
+    this.movies$ = this._movieService.movies$.subscribe(val => {
+      if (val) {
+        this.movies = val;
+      }
+    });
+  }
+
+  getOnlineStatus() {
+    this.isOnline$ = this._onlineStatusService.onlinePolling$.subscribe(val => {
+      if (this.isOnline !== val) {
+        this.isOnline = val;
+        this._movieService.updateMovies(this._storage, this.isOnline);
+        // when it is online check weather we have a video running otherwise load one
+        if (this.isOnline && this.player && this.player.getManifestUri() === null) {
+          from(this.player.load(this.manifestUri)).pipe(
+            retry(3)
+          ).subscribe({
+            next: _ => this.video.play(),
+            error: e => {
+              console.error('Error loading manifest:  ' + e);
+              this.isLoading = false;
+            }
+          });
+        }
+      }
+    });
   }
 
   // checking for scroll events
@@ -81,19 +112,29 @@ export class StartPageComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    // get the movies list from the mocked movies api
+    this.getMovies();
     // update the movies list
     this._storage = this._playerService.Storage;
     if (this._storage) {
-      this._movieService.updateMovies(this._storage);
+      this.getOnlineStatus();
+      this._movieService.updateMovies(this._storage, this.isOnline);
     } else {
       console.error('no storage, could not update movies');
     }
-    // get the movies list from the mocked movies api
-    this.getMovies();
   }
 
   ngAfterViewInit() {
     // after view init the video element/ shaka player should be initialized
     this.initPlayer();
+  }
+
+  ngOnDestroy() {
+    if (this.movies$) {
+      this.movies$.unsubscribe();
+    }
+    if (this.isOnline$) {
+      this.isOnline$.unsubscribe();
+    }
   }
 }

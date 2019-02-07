@@ -2,14 +2,15 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angula
 import * as shaka from 'shaka-player';
 import { IMovie } from '../models/movies';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatSnackBar } from '@angular/material';
 
 import { DownloadMovieDialogComponent } from '../download-movie-dialog/download-movie-dialog.component';
 import { MovieService } from '../services/movie.service';
 import { PlayerService } from '../services/player.service';
 
-import { from } from 'rxjs';
+import { from, Subscription } from 'rxjs';
 import { retry } from 'rxjs/operators';
+import { OnlineStatusService } from '../online-status.service';
 
 
 
@@ -25,6 +26,10 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   private _player: shaka.Player;
   private _video: HTMLVideoElement;
   private _storage: shaka.offline.Storage = null;
+
+   // isOnline
+   isOnline$: Subscription;
+   isOnline = true;
 
   /**
    * display informations
@@ -43,7 +48,9 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     public dialog: MatDialog,
     private _movieService: MovieService,
-    private _playerService: PlayerService
+    private _playerService: PlayerService,
+    private _onlineStatusService: OnlineStatusService,
+    private _snackBar: MatSnackBar
   ) { }
 
   goBack(): void {
@@ -77,30 +84,31 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   private _playVideo() {
     // this.movie.offlineUri = result.offlineUri;
     this._player.unload().then(() => {
-      console.log('unload video');
-      let manifestUri = null;
-      console.log('play offline uri');
-      console.log(this.movie.offlineUri);
-      if (this.movie.offlineUri && this.movie.offlineUri !== 'null') {
-        console.log('offline uri');
+      let manifestUri = '';
+      // do we have an offline uri?
+      if (this.movie.offlineUri && this.movie.offlineUri !== '') {
         manifestUri = this.movie.offlineUri;
-      } else {
+      } else if (this.isOnline) { // are we online?
         manifestUri = this.movie.manifestUri;
+      } else { // we are offline and do not have an offline uri
+        manifestUri = null;
+        this.openSnackBar('You are offline', 'Please go back to start page');
       }
-      console.log('mainifest uri');
-      console.log(manifestUri);
-      from(this._player.load(manifestUri)).pipe(
-        retry(3)
-      ).subscribe({
-        next: _ => {
-          this._video.play();
-          this.variantTracks = this._player.getVariantTracks();
-        },
-        error: e => {
-          console.error('Error loading manifest:  ' + e);
-          // this.isLoading = false;
-        }
-      });
+      if (manifestUri) {
+        from(this._player.load(manifestUri)).pipe(
+          retry(3)
+        ).subscribe({
+          next: _ => {
+            this._video.play();
+            this.variantTracks = this._player.getVariantTracks();
+            this.languages = this._player.getAudioLanguages();
+          },
+          error: e => {
+            console.error('Error loading manifest:  ' + e);
+            // this.isLoading = false;
+          }
+        });
+      }
     });
   }
   // Error handling
@@ -112,6 +120,13 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   onError(error) {
     // Log the error.
     console.error('Error code', error.code, 'object', error);
+  }
+
+  // warn the user, that he is offline
+  openSnackBar(message: string, action: string) {
+    this._snackBar.open(message, action, {
+      duration: 5000,
+    });
   }
 
   // update informations
@@ -127,9 +142,6 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     this.streamBandwidth = `Required Bandwith: ${stats.streamBandwidth} bit/sec`;
     this.networkBandwith = `Current Bandwidth: ${stats.estimatedBandwidth} bit/sec`;
   }
-
-
-
 
   changeLanguage(val): void {
     this._player.selectAudioLanguage(val);
@@ -154,9 +166,6 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     // on closing dialog
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log('success');
-        console.log(result);
-        console.log(this.movie);
         const mClone = Object.assign({}, this.movie);
         mClone.offlineUri = result.offlineUri;
         this.movie = mClone;
@@ -169,10 +178,22 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   deleteMovie(): void {
     this._storage.remove(this.movie.offlineUri).then(val => {
       const mClone = Object.assign({}, this.movie);
-      mClone.offlineUri = 'null';
+      mClone.offlineUri = '';
       this.movie = mClone;
       this._movieService.updateMovies(this._storage);
       this._playVideo();
+    });
+  }
+
+  getOnlineStatus() {
+    this.isOnline$ = this._onlineStatusService.onlinePolling$.subscribe(val => {
+      if (this.isOnline !== val) {
+        this.isOnline = val;
+        this._movieService.updateMovies(this._storage, this.isOnline);
+        if (!this.isOnline && this.movie.offlineUri === '') {
+          this.openSnackBar('Warning', 'You are offline');
+        }
+      }
     });
   }
 
@@ -190,6 +211,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
       }
     );
     this._storage = this._playerService.Storage;
+    this.getOnlineStatus();
   }
 
   ngAfterViewInit() {

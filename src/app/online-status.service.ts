@@ -7,7 +7,7 @@ import { mergeMap, tap, map, takeUntil } from 'rxjs/operators';
 })
 export class OnlineStatusService {
   private DEFAULTS = {
-    uri: "https://storage.googleapis.com/shaka-demo-assets/",
+    uri: 'https://storage.googleapis.com/shaka-demo-assets/',
     timeout: 5000
   };
   private unsubscribe$ = new Subject();
@@ -28,7 +28,7 @@ export class OnlineStatusService {
 
       xhr.open('GET', uri);
       xhr.timeout = timeout;
-      
+
       xhr.send();
     }));
   }
@@ -41,10 +41,10 @@ export class OnlineStatusService {
   }
 
   // Creates http requests every x seconds to determine online status.
-  get onlinePolling$(): Observable<number | boolean> {
+  get onlinePolling$(): Observable<boolean> {
     return timer(0, 5000).pipe(
       mergeMap(_ => this.isOnline$),
-      tap(online => console.log("Get online status: " + online)),
+      // tap(online => console.log('Get online status: ' + online)),
       takeUntil(this.unsubscribe$),
     );
   }
@@ -61,7 +61,6 @@ export class OnlineStatusService {
     if (offlineMode) {
       this._isOnline = false;
     }
-    
     this.unsubscribe$.next();
   }
 
