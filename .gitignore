@@ -9,6 +9,8 @@
 main.js
 src/**/*.js
 *.js.map
+/electron-media-player-win32-x64
+*.dll
 
 # dependencies
 /node_modules
