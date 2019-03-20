@@ -9,6 +9,8 @@
 main.js
 src/**/*.js
 *.js.map
+/electron-media-player-win32-x64
+*.dll
 
 # dependencies
 /node_modules
@@ -38,7 +40,6 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
-package-lock.json
 
 # e2e
 /e2e/*.js
@@ -48,3 +49,5 @@ package-lock.json
 # System Files
 .DS_Store
 Thumbs.db
+
+electron-media-player-*
