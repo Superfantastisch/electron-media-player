@@ -8,6 +8,13 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field>
+    <mat-select formControlName="textLanguages" (valueChange)="changeTextLanguage($event)" placeholder="Select Subtitle Language">
+      <mat-option *ngFor="let textLanguage of textLanguages" [value]="textLanguage">
+        {{ textLanguage }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
     <mat-select formControlName="quality" (valueChange)="changeQuality($event)" placeholder="Select Quality">
       <mat-option *ngFor="let variant of langVariantTracks" [value]="variant">
         {{ variant.width + " x " + variant.height + " - " + variant.bandwidth }}

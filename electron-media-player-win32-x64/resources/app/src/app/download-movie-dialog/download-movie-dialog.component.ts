@@ -13,11 +13,16 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class DownloadMovieDialogComponent implements OnInit {
   languages = new Array<String>();
+  textLanguages = new Array<String>();
   variantTracks = new Array<shaka.shakaExtern.Track>();
-  // variant tracks filterd by language selection
+  // variant tracks filtered by language selection
   langVariantTracks = new Array<shaka.shakaExtern.Track>();
-  // tracks who finaly should be downloaded
+  // tracks that finally should be downloaded
   finalVariantTracks = new Array<shaka.shakaExtern.Track>();
+
+  variantTextTracks = new Array<shaka.shakaExtern.Track>();
+  langVariantTextTracks = new Array<shaka.shakaExtern.Track>();
+
   // value for progressbar
   downloadProgress$ = new BehaviorSubject<number>(0);
 
@@ -26,7 +31,8 @@ export class DownloadMovieDialogComponent implements OnInit {
 
   movieDownloadForm = this._fb.group({
     quality: ['', Validators.required],
-    languages: ['', Validators.required]
+    languages: ['', Validators.required],
+    textLanguages: ['', Validators.required]
   });
 
   constructor(
@@ -70,6 +76,22 @@ export class DownloadMovieDialogComponent implements OnInit {
       }
     }
   }
+
+  // business logic for language change
+  changeTextLanguage(event) {
+    if (event && event !== '') {
+      try {
+        this.langVariantTextTracks = this.variantTextTracks.filter(vt => vt.language === event);
+        console.log(this.langVariantTextTracks)
+      } catch (error) {
+        console.error('can not filter variant tracks by language');
+        console.error(error);
+      } finally {
+        this.movieDownloadForm.controls['quality'].enable();
+      }
+    }
+  }
+
   // business logic for quality change
   changeQuality(event) {
     if (event && event !== '') {
@@ -92,11 +114,19 @@ export class DownloadMovieDialogComponent implements OnInit {
 
   selectTracks = () => {
     try {
-      if (this.finalVariantTracks && this.finalVariantTracks.length > 0) {
-        return this.finalVariantTracks;
+      let tracks = [];
+      if (this.finalVariantTracks && this.finalVariantTracks.length > 0 ) {
+        tracks = tracks.concat(this.finalVariantTracks);
       } else {
         throw new RangeError('no variant tracks available on download');
       }
+      if (this.langVariantTextTracks && this.langVariantTextTracks.length > 0 ) {
+        tracks = tracks.concat(this.langVariantTextTracks);
+      } else {
+        throw new RangeError('no variant text tracks available on download');
+      }
+      console.log(tracks)
+      return tracks;
     } catch (error) {
       console.error('could not select tracks');
       console.error(error);
@@ -129,7 +159,10 @@ export class DownloadMovieDialogComponent implements OnInit {
 
   ngOnInit() {
     this.variantTracks = this.data.player.getVariantTracks();
+    this.variantTextTracks = this.data.player.getTextTracks();
     this.languages = this.data.player.getAudioLanguages();
+    this.textLanguages = this.data.player.getTextLanguages();
+
     // disable quality select on init since it is related to the language
     this.movieDownloadForm.get('quality').disable();
     this.updateOnlineStatus();

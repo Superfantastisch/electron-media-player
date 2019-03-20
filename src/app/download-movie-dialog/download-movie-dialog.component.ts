@@ -15,9 +15,9 @@ export class DownloadMovieDialogComponent implements OnInit {
   languages = new Array<String>();
   textLanguages = new Array<String>();
   variantTracks = new Array<shaka.shakaExtern.Track>();
-  // variant tracks filterd by language selection
+  // variant tracks filtered by language selection
   langVariantTracks = new Array<shaka.shakaExtern.Track>();
-  // tracks who finaly should be downloaded
+  // tracks that finally should be downloaded
   finalVariantTracks = new Array<shaka.shakaExtern.Track>();
 
   variantTextTracks = new Array<shaka.shakaExtern.Track>();

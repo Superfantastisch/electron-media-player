@@ -39,8 +39,9 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   // The bandwidth required for the current streams (total, in bit/sec)
   streamBandwidth = '';
   // The current estimated network bandwidth (in bit/sec)
-  networkBandwith = '';
+  networkBandwidth = '';
   languages = new Array<String>();
+  textLanguages = new Array<String>();
   variantTracks = new Array<shaka.shakaExtern.Track>();
 
   constructor(
@@ -60,6 +61,8 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   initPlayer(): void {
     this._video = this.videoPlayer.nativeElement;
     this._player = this._playerService.Player;
+    this._player.setTextTrackVisibility(true);
+
     this._player.attach(this._video).then(() => {
       // Listen for events.
       this._player.addEventListener('error', this.onErrorEvent);
@@ -102,6 +105,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
             this._video.play();
             this.variantTracks = this._player.getVariantTracks();
             this.languages = this._player.getAudioLanguages();
+            this.textLanguages = this._player.getTextLanguages();
           },
           error: e => {
             console.error('Error loading manifest:  ' + e);
@@ -139,12 +143,16 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
     this.videoResolution = `${stats.width} x ${stats.height}`;
   }
   private _updateBufferInformations(stats: shaka.shakaExtern.stats): void {
-    this.streamBandwidth = `Required Bandwith: ${stats.streamBandwidth} bit/sec`;
-    this.networkBandwith = `Current Bandwidth: ${stats.estimatedBandwidth} bit/sec`;
+    this.streamBandwidth = `Required Bandwidth: ${stats.streamBandwidth} bit/sec`;
+    this.networkBandwidth = `Current Bandwidth: ${stats.estimatedBandwidth} bit/sec`;
   }
 
   changeLanguage(val): void {
     this._player.selectAudioLanguage(val);
+  }
+
+  changeTextLanguage(val) : void {
+    this._player.selectTextLanguage(val)
   }
 
   changeResolution(val): void {

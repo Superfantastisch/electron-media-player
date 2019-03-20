@@ -36,3 +36,13 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+## To run the application
+Run `ng serve`
+Run in a second terminal `npm run electron:serve`
+
+## To build the application
+Run `npm run electron-aot`
+Install `npm install electron-packager -g`
+Install `npm install electron-packager -D`
+Finaly on Windows run `electrong-packager . --platform=win32`

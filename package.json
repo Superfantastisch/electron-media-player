@@ -1,6 +1,6 @@
 {
   "name": "electron-media-player",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "main.js",
   "scripts": {
     "ng": "ng",
@@ -12,7 +12,9 @@
     "electron": "ng build --base-href ./ && electron .",
     "electron-aot": "ng build --prod --base-href ./ && electron .",
     "electron:serve-tsc": "tsc -p tsconfig-serve.json",
-    "electron:serve": "wait-on http-get://localhost:4200/ && npm run electron:serve-tsc && electron . --serve"
+    "electron:serve": "wait-on http-get://localhost:4200/ && npm run electron:serve-tsc && electron . --serve",
+    "electron:build": "tsc -p tsconfig-serve.json && ng build --base-href ./ && electron-packager . --all --arch=x64",
+    "electron:build-mac": "electron-packager . --platform=darwin --arch=x64"
   },
   "private": true,
   "dependencies": {
