@@ -41,6 +41,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   // The current estimated network bandwidth (in bit/sec)
   networkBandwith = '';
   languages = new Array<String>();
+  textLanguages = new Array<String>();
   variantTracks = new Array<shaka.shakaExtern.Track>();
 
   constructor(
@@ -60,6 +61,8 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
   initPlayer(): void {
     this._video = this.videoPlayer.nativeElement;
     this._player = this._playerService.Player;
+    this._player.setTextTrackVisibility(true);
+
     this._player.attach(this._video).then(() => {
       // Listen for events.
       this._player.addEventListener('error', this.onErrorEvent);
@@ -102,6 +105,7 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
             this._video.play();
             this.variantTracks = this._player.getVariantTracks();
             this.languages = this._player.getAudioLanguages();
+            this.textLanguages = this._player.getTextLanguages();
           },
           error: e => {
             console.error('Error loading manifest:  ' + e);
@@ -145,6 +149,10 @@ export class DetailPageComponent implements OnInit, AfterViewInit {
 
   changeLanguage(val): void {
     this._player.selectAudioLanguage(val);
+  }
+
+  changeTextLanguage(val) : void {
+    this._player.selectTextLanguage(val)
   }
 
   changeResolution(val): void {

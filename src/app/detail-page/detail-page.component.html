@@ -22,6 +22,13 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field>
+          <mat-select placeholder="Select Subtitle Language" (selectionChange)="changeTextLanguage($event.value)">
+            <mat-option *ngFor="let textLanguage of textLanguages" [value]="textLanguage">
+              {{ textLanguage }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
           <mat-select placeholder="Select Resolution" (selectionChange)="changeResolution($event.value)">
             <mat-option>
               Adaptive
